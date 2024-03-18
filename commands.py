@@ -4,9 +4,12 @@ import inspect
 from datetime import datetime
 from prettytable import PrettyTable
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 def help():
     ''' Print names, descriptions, and parameters of all functions with parameters '''
-    functions = [create_campaign, create]
+    functions = [create_campaign, select_campaign , create]
 
     table = PrettyTable()
     table.field_names = ["Function Name", "Description", "Parameters"]
@@ -25,9 +28,15 @@ def help():
 
     print(table)
 
-def create(campaign: str, category: str, desired_file_name: str, template_name: str):
+# User functions
+
+def create(campaign: str, desired_file_name: str, template_name: str):
     ''' Create a new item based on the template
-        ie: create wonderful_campaign characters gerald default_character_template'''
+        ie: create gerald default_character_template'''
+    with open(template_path, 'r') as template_file:
+            template = json.load(template_file)
+            category = template["dest"]
+
     template_path = os.path.join("campaigns", campaign, 'templates', f'{template_name}.json')
     output_folder = os.path.join("campaigns", campaign, category)
 
@@ -35,11 +44,13 @@ def create(campaign: str, category: str, desired_file_name: str, template_name: 
         # Load the template
         with open(template_path, 'r') as template_file:
             template = json.load(template_file)
+            template["name"]
 
         # Ask questions based on the template
         for key, value in template.items():
             user_input = input(f"{key}: ").strip()
-            template[key] = user_input if user_input else value
+            if key == "tags": template[key] = value
+            else: template[key] = user_input if user_input else value
 
         # Create the output folder if it doesn't exist
         if not os.path.exists(output_folder):
@@ -56,68 +67,25 @@ def create(campaign: str, category: str, desired_file_name: str, template_name: 
     except Exception as e:
         print(f"Error: {e}")
 
-def create_default_templates(campaign_folder: str):
-    ''' Create default templates for NPCs, characters, items, enemies, and item recipes '''
-    template_folder = os.path.join(campaign_folder, 'templates')
+def generate_map(humidity: float = 0.5,            # Range: 0.0 to 1.0
+                humidity_variance: float = 0.2,     # Range: 0.0 to 1.0
+                temperature: float = 0.4,            # Range: 0.0 to 1.0
+                temperature_variance: float = 0.3,    # Range: 0.0 to 1.0
 
-    # Create the 'templates' folder if it doesn't exist
-    if not os.path.exists(template_folder):
-        os.makedirs(template_folder)
+                # Geographical Variables
+                sea_level: float = 0.0,          # Height in meters above or below sea level
+                height_peak: float = 2000.0,         # Height of the highest point in meters above sea level
+                height_trough: float = -500.0,         # Depth of the lowest point in meters below sea level
+                terrain_smoothness: float = 0.5,         # Range: 0.0 to 1.0: Smoothing after-effect for terrain
 
-    default_templates = {
-        'NPCs': {
-            "name": "NPC Name",
-            "description": "NPC Description",
-            "role": "NPC Role",
-            "alignment": "NPC Alignment",
-            "personality": "NPC Personality",
-            "background": "NPC Background"
-        },
-        'characters': {
-            "name": "Character Name",
-            "race": "Character Race",
-            "class": "Character Class",
-            "background": "Character Background",
-            "alignment": "Character Alignment",
-            "level": 1,
-            "hp": 10,
-            "strength": 10,
-            "dexterity": 10,
-            "constitution": 10,
-            "intelligence": 10,
-            "wisdom": 10,
-            "charisma": 10,
-            "equipment": [],
-            "features_and_traits": [],
-            "backstory": "Character Backstory"
-        },
-        'items': {
-            "name": "Item Name",
-            "type": "Item Type",
-            "description": "Item Description",
-            "value": 0
-        },
-        'enemies': {
-            "name": "Enemy Name",
-            "type": "Enemy Type",
-            "description": "Enemy Description",
-            "hp": 10,
-            "attack": 5,
-            "defense": 5
-        },
-        'item_recipes': {
-            "name": "Recipe Name",
-            "ingredients": [],
-            "result": "Resulting Item"
-        }
-    }
-
-    for category, template_data in default_templates.items():
-        template_path = os.path.join(template_folder, f'{category}_template.json')
-        with open(template_path, 'w') as template_file:
-            json.dump(template_data, template_file, indent=2)
-
-        print(f"Created {template_path}")
+                # Geological Variables
+                cave_density: float = 0.005,  # Number of caves or caverns per square kilometer
+                volcano_presence: bool = True, # True if there are active volcanoes, False otherwise
+                island_count: int = 5,          # Number of distinct islands
+                flood_risk: float = 0.7,         # Measure of flood risk (0.0 to 1.0)
+                geological_stability: float = 0.8, # Measure of seismic activity or stability (0.0 to 1.0)
+    ):
+    pass
 
 def create_campaign(campaign_name: str):
     ''' Create a new campaign folder with specified name '''
@@ -174,8 +142,158 @@ def create_campaign(campaign_name: str):
     except Exception as e:
         print(f"Error: {e}")
 
-if __name__ == "__main__":
-    # Add create_campaign to the list of functions
-    functions = [create_campaign, create]
-    help()
+def select_campaign():
+    ''' Select an existing campaign via a menu '''
+    settings_path = os.path.abspath("settings.json")
+    campaigns_fstring = get_campaigns_select_menu()
+    campaign_count = len(campaigns_fstring.split("\n"))
+    if campaign_count == 1: return None
 
+    campaign_index = try_loop(message=f"What campaign do you want to select?\n{campaigns_fstring}",
+                                conditions={"is_between": (0, campaign_count+1)})
+
+    if int(campaign_index) == len(get_campaigns())+1:
+        campaign = None
+    else:
+        campaign = get_campaigns()[int(campaign_index)-1]
+    
+    with open(settings_path, 'r') as file:
+        settings = json.load(file)
+    
+    settings["campaign"] = campaign
+
+    with open(settings_path, "w") as file:
+        json.dump(settings, file)
+        
+# Backend functions
+class Invalid_Answer(Exception):
+    "Answer is not correct for try_loop"
+    def __init__(self, condition, parameters) -> None:
+        message = f"Incorrect answer, failed to pass condition: {condition}: {parameters}"
+        super().__init__(message)
+
+def try_loop(message: str, conditions: dict, whitelisted: list = None, blacklisted: list = None, custom_exception: Exception = None):
+    ''' Conditions: is_between : (val, val),
+    '''
+    while True:
+        try:
+            answer = input(f"{message}\n")
+
+
+            for condition in conditions.keys():
+                if condition == "is_between": 
+                    if not is_between(int(answer), conditions[condition]):
+                        raise Invalid_Answer(condition, conditions[condition])
+            if whitelisted:
+                if answer not in whitelisted:
+                    raise Invalid_Answer("Not whitelisted", answer)
+            if blacklisted:
+                if answer in blacklisted:
+                    raise Invalid_Answer("Blacklisted", answer)
+
+            return answer
+        except Exception as e:
+            print(e)
+
+def is_between(val, bounds):
+    if val > bounds[0] and val < bounds[1]: return True
+    else:
+        return False
+
+def create_default_templates(campaign_folder: str):
+    ''' Create default templates for NPCs, characters, items, enemies, and item recipes '''
+    template_folder = os.path.join(campaign_folder, 'templates')
+
+    # Create the 'templates' folder if it doesn't exist
+    if not os.path.exists(template_folder):
+        os.makedirs(template_folder)
+
+    default_templates = {
+        'NPC': {
+            "name": "NPC Name",
+            "description": "NPC Description",
+            "role": "NPC Role",
+            "alignment": "NPC Alignment",
+            "personality": "NPC Personality",
+            "background": "NPC Background",
+            "dest": "NPCs",
+            "tags": []
+        },
+        'character': {
+            "name": "Character Name",
+            "race": "Character Race",
+            "class": "Character Class",
+            "background": "Character Background",
+            "alignment": "Character Alignment",
+            "level": 1,
+            "hp": 10,
+            "strength": 10,
+            "dexterity": 10,
+            "constitution": 10,
+            "intelligence": 10,
+            "wisdom": 10,
+            "charisma": 10,
+            "equipment": [],
+            "features_and_traits": [],
+            "backstory": "Character Backstory",
+            "dest": "characters",
+            "tags": []
+        },
+        'item': {
+            "name": "Item Name",
+            "type": "Item Type",
+            "description": "Item Description",
+            "value": 0,
+            "dest": "items",
+            "tags": []
+        },
+        'enemy': {
+            "name": "Enemy Name",
+            "type": "Enemy Type",
+            "description": "Enemy Description",
+            "hp": 10,
+            "attack": 5,
+            "defense": 5,
+            "dest": "enemies",
+            "tags": []
+        },
+        'item_recipe': {
+            "name": "Recipe Name",
+            "ingredients": [],
+            "result": "Resulting Item",
+            "tags": []
+        }
+    }
+
+    for category, template_data in default_templates.items():
+        template_path = os.path.join(template_folder, f'{category}_template.json')
+        with open(template_path, 'w') as template_file:
+            json.dump(template_data, template_file, indent=2)
+
+        print(f"Created {template_path}")
+
+def list_to_numbered_fstring(input_list: list):
+    return '\n'.join(f"{index + 1}: {item}" for index, item in enumerate(input_list))
+
+def get_campaigns():
+    campaigns = [f for f in os.listdir("campaigns")]
+    return campaigns
+
+def get_campaigns_select_menu():
+    campaigns = get_campaigns()
+    campaigns.append("None")
+    campaigns_select_menu = list_to_numbered_fstring(campaigns)
+    return campaigns_select_menu
+
+def initialise():
+    settings_path = os.path.abspath("settings.json")
+    if not os.path.exists(settings_path):
+        settings = {
+            "campaign": None
+        }
+    
+        with open(settings_path, "w") as file:
+            json.dump(settings, file)
+
+if __name__ == "__main__":
+    initialise()

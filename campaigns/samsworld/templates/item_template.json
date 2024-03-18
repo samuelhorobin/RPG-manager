@@ -1,0 +1,8 @@
+{
+  "name": "Item Name",
+  "type": "Item Type",
+  "description": "Item Description",
+  "value": 0,
+  "dest": "items",
+  "tags": []
+}

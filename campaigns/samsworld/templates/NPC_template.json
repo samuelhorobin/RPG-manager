@@ -1,0 +1,10 @@
+{
+  "name": "NPC Name",
+  "description": "NPC Description",
+  "role": "NPC Role",
+  "alignment": "NPC Alignment",
+  "personality": "NPC Personality",
+  "background": "NPC Background",
+  "dest": "NPCs",
+  "tags": []
+}

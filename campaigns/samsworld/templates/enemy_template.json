@@ -1,0 +1,10 @@
+{
+  "name": "Enemy Name",
+  "type": "Enemy Type",
+  "description": "Enemy Description",
+  "hp": 10,
+  "attack": 5,
+  "defense": 5,
+  "dest": "enemies",
+  "tags": []
+}

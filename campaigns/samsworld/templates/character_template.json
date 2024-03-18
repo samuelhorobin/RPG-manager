@@ -1,0 +1,20 @@
+{
+  "name": "Character Name",
+  "race": "Character Race",
+  "class": "Character Class",
+  "background": "Character Background",
+  "alignment": "Character Alignment",
+  "level": 1,
+  "hp": 10,
+  "strength": 10,
+  "dexterity": 10,
+  "constitution": 10,
+  "intelligence": 10,
+  "wisdom": 10,
+  "charisma": 10,
+  "equipment": [],
+  "features_and_traits": [],
+  "backstory": "Character Backstory",
+  "dest": "characters",
+  "tags": []
+}

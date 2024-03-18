@@ -1,6 +1,10 @@
 import commands
+import os
+import json
 
 def main():
+    commands.select_campaign()
+
     while True:
         command = input("Enter a command: ")
         command_parts = command.split()
