@@ -30,14 +30,19 @@ def help():
 
 # User functions
 
-def create(campaign: str, desired_file_name: str, template_name: str):
+def create(desired_file_name: str, template_name: str):
     ''' Create a new item based on the template
         ie: create gerald default_character_template'''
-    with open(template_path, 'r') as template_file:
-            template = json.load(template_file)
-            category = template["dest"]
+    campaign = get_campaign()
+
+    
 
     template_path = os.path.join("campaigns", campaign, 'templates', f'{template_name}.json')
+
+    with open(template_path, 'r') as template_file:
+                template = json.load(template_file)
+                category = template["dest"]
+
     output_folder = os.path.join("campaigns", campaign, category)
 
     try:
@@ -48,6 +53,7 @@ def create(campaign: str, desired_file_name: str, template_name: str):
 
         # Ask questions based on the template
         for key, value in template.items():
+            if key == "dest": continue
             user_input = input(f"{key}: ").strip()
             if key == "tags": template[key] = value
             else: template[key] = user_input if user_input else value
@@ -233,8 +239,6 @@ def create_default_templates(campaign_folder: str):
             "intelligence": 10,
             "wisdom": 10,
             "charisma": 10,
-            "equipment": [],
-            "features_and_traits": [],
             "backstory": "Character Backstory",
             "dest": "characters",
             "tags": []
@@ -279,6 +283,14 @@ def get_campaigns():
     campaigns = [f for f in os.listdir("campaigns")]
     return campaigns
 
+def get_campaign():
+    settings_path = os.path.abspath("settings.json")
+    with open(settings_path, 'r') as file:
+        settings = json.load(file)
+        campaign = settings["campaign"]
+    
+    return campaign
+
 def get_campaigns_select_menu():
     campaigns = get_campaigns()
     campaigns.append("None")
@@ -289,11 +301,73 @@ def initialise():
     settings_path = os.path.abspath("settings.json")
     if not os.path.exists(settings_path):
         settings = {
-            "campaign": None
+            "campaign": None,
+            "gpt-api-key": None
         }
     
         with open(settings_path, "w") as file:
             json.dump(settings, file)
+
+    data_path = os.path.abspath("data.json")
+    if not os.path.exists(data_path):
+        data = {"tags" : {
+    "Physical Attributes": [
+        "Tangible", "Large", "Compact", "Fragile", "Flexible", "Durable", "Disposable", 
+        "Biodegradable", "Industrial", "Magnetic", "Synthetic", "Unique", "Invisible", 
+        "Precious", "Synthetic", "Fragile", "Compact", "Disposable", "Portable", "Mechanical", 
+        "Digital", "Ancient", "Compact", "Durable", "Portable", "Magnetic", "Mechanical", 
+        "Industrial", "Fragile", "Disposable", "Synthetic", "Biodegradable", "Durable", 
+        "Mechanical", "Synthetic", "Durable", "Disposable", "Fragile", "Imperishable", "Versatile"
+    ],
+    "Functionality and Usage": [
+        "Interior", "Practical", "Moving Parts", "Communication", "Transportation", "Tool", 
+        "Entertainment", "System", "Technology", "Education", "Possession", "Wearable", 
+        "Recreation", "Ritualistic", "Navigation", "Magnetic", "Musical", "Interactive", 
+        "Personal", "Community", "Celebratory", "Recreational", "Tactical", "Eco-Friendly", 
+        "Remote", "Autonomous", "Virtual", "Transformative"
+    ],
+    "Natural and Environmental": [
+        "Organic", "Natural", "Living", "Health", "Energy", "Consumable", "Biodegradable", 
+        "Sustainable", "Spiritual", "Biological", "Eco-Friendly"
+    ],
+    "Cultural and Social": [
+        "Common", "Global", "Manufactured", "Religious", "Luxury", "Traditional", 
+        "Customizable", "Community", "Cultural"
+    ],
+    "Emotional and Abstract": [
+        "Symbolic", "Aesthetic", "Spiritual", "Mythology", "Nostalgic", "Imaginative", 
+        "Mysterious", "Magical", "Supernatural", "Harmonious"
+    ],
+    "Time-related": [
+        "Historical", "Futuristic", "Antique", "Vintage", "Ancient", "Revolutionary", 
+        "Modern", "Contemporary", "Ageless", "Timeless", "Timely", "Epochal", 
+        "Epoch-making", "Time-honored"
+    ],
+    "Color and Appearance": [
+        "Vivid", "Monochromatic", "Radiant", "Glossy", "Matte", "Shiny", "Metallic", 
+        "Transparent", "Opaque", "Luminous", "Translucent", "Holographic", "Iridescent", 
+        "Neon", "Pastel", "Subdued", "Muted", "Bold", "Subtle", "Vibrant", "Earthy", 
+        "Translucent", "Fluorescent", "Glossy", "Lustrous", "Glittering", "Sheen", 
+        "Satin", "Polished", "Frosted", "Sparkling", "Gleaming", "Opalescent"
+    ]}
+
+        }
+    
+        with open(data_path, "w") as file:
+            json.dump(data, file)
+
+def settings_warnings():
+    settings_path = os.path.abspath("settings.json")
+    path_printed = False
+    with open(settings_path, 'r') as file:
+        for line in file:
+            data = json.loads(line.strip())
+            for key, value in data.items():
+                if value is None:
+                    if not path_printed:
+                        print(f"Problem(s) at {settings_path}:")
+                        path_printed = True
+                    print(f"Warning: Value for key '{key}' is None.")
 
 if __name__ == "__main__":
     initialise()

@@ -3,7 +3,9 @@ import os
 import json
 
 def main():
+    commands.initialise()
     commands.select_campaign()
+    commands.settings_warnings()
 
     while True:
         command = input("Enter a command: ")

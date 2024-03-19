@@ -1,0 +1,20 @@
+{
+  "name": "samoth",
+  "race": "age",
+  "class": "gre",
+  "background": "aerg",
+  "alignment": "grea",
+  "level": "aerg",
+  "hp": "gre",
+  "strength": "aer",
+  "dexterity": "gaer",
+  "constitution": "aer",
+  "intelligence": "gr",
+  "wisdom": "aer",
+  "charisma": "grea",
+  "equipment": "aer",
+  "features_and_traits": "grea",
+  "backstory": "aerg",
+  "dest": "characters",
+  "tags": []
+}
